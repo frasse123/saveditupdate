@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <title>Saved it</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0ea5e9" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- BASE: auto-detektera repo-path (GitHub Pages) eller root (lokalt/egen domän) -->
+    <script>
+      (function computeBase(){
+        const parts = location.pathname.split('/').filter(Boolean);
+        window.__BASE_PATH__ = parts.length ? `/${parts[0]}/` : '/';
+      })();
+    </script>
+
+    <style>
+      :root{
+        --accent:#0f766e; --accent-2:#0ea5a3;
+        --bg:#f6f8fb; --surface:#ffffff;
+        --text:#0f172a; --muted:#6b7280;
+        --border:#e8eaf0; --ring:rgba(14,165,233,.18);
+        --green:#22c55e; --red:#ef4444;
+      }
+      :root { color-scheme: light; }
+      html { -webkit-text-size-adjust: 100%; }
+      body{ font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; color:var(--text); background:var(--bg); }
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { width:100%; max-width:100%; overflow-x:hidden; }
+      input, button, select, textarea { width:100%; max-width:100%; min-width:0; }
+      button { -webkit-tap-highlight-color: transparent; }
+
+      .hero{
+        background: radial-gradient(1200px 300px at 30% -10%, #bff0ec 0%, transparent 60%),
+                    linear-gradient(135deg, #d8f4f1 0%, #eaf6ff 40%, #f7f9ff 100%);
+        padding: max(28px, calc(env(safe-area-inset-top) + 18px)) 0 28px;
+        border-bottom: 1px solid var(--border);
+      }
+      .wrap{ max-width: 860px; margin: 0 auto; padding: 0 22px 28px; }
+      .top{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
+      .brand{ display:flex; align-items:center; gap:12px; }
+      .logo{ width: 38px; height: 38px; border-radius: 12px; background: conic-gradient(from 200deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 18px rgba(15,118,110,.25), inset 0 1px 3px rgba(255,255,255,.6);}
+      .brand h1{ font-size: 30px; line-height:1.1; margin:0; letter-spacing:-0.01em; }
+      .subtitle{ color:var(--muted); margin:6px 0 0 50px; }
+
+      .install{ padding:10px 14px; border-radius: 999px; background:#fff; border:1px solid var(--border); box-shadow:0 2px 10px rgba(2,6,23,.06); width:auto; }
+      .install[hidden]{ display:none; }
+
+      .menu-btn { width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:#fff; display:flex; align-items:center; justify-content:center; }
+      .menu-btn span{ display:block; width:18px; height:2px; background:#0f172a; position:relative; }
+      .menu-btn span::before, .menu-btn span::after{ content:""; position:absolute; left:0; width:18px; height:2px; background:#0f172a; }
+      .menu-btn span::before{ top:-6px; } .menu-btn span::after{ top:6px; }
+
+      .content{ max-width: 860px; margin: 0 auto; padding: 22px; }
+
+      .row{ display:grid; grid-template-columns: 1fr 160px auto; gap: 10px; margin: 10px 0 18px; }
+      @media (max-width: 560px){ .row{ grid-template-columns: 1fr; } }
+      input[type="text"], input[type="number"]{
+        width:100%; padding: 12px 14px; border:1px solid var(--border); border-radius: 12px; background:#fff;
+        font-size:17px !important; color:var(--text); caret-color:var(--text);
+        outline:none; transition: border-color .15s, box-shadow .15s; box-shadow: 0 1px 0 rgba(15,23,42,.03);
+      }
+      input::placeholder{ color:#9aa0a6; opacity:1; }
+      input:focus{ border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+      input:-webkit-autofill{ -webkit-text-fill-color: var(--text) !important; box-shadow: 0 0 0 1000px #fff inset; -webkit-box-shadow: 0 0 0 1000px #fff inset; }
+
+      .btn{ padding: 11px 14px; border-radius: 12px; border:1px solid var(--border); background:#fff; color:var(--text); cursor:pointer; font-weight:600; transition: transform .06s, box-shadow .15s; box-shadow: 0 1px 0 rgba(15,23,42,.05); width:auto; }
+      .btn:active{ transform: translateY(1px); }
+      .btn-add{ background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; border-color:transparent; box-shadow: 0 8px 20px rgba(15,118,110,.25); }
+
+      .card{ background: var(--surface); border:1px solid var(--border); border-radius: 16px; box-shadow: 0 2px 12px rgba(15,23,42,.06); }
+      .list-item{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+      .list-item:last-child{ border-bottom: 0; }
+
+      .actions{ display:flex; gap: 8px; }
+      .save   { background: #22c55e; border-color:#22c55e; color:#fff; }
+      .danger { background: #ef4444; border-color:#ef4444; color:#fff; }
+
+      .section{ display:flex; align-items:center; justify-content:space-between; margin: 22px 0 12px; }
+      .section h3{ margin:0; font-size: 16px; letter-spacing: .02em; color:#111; }
+      .muted{ color:var(--muted); font-style:italic; text-align:center; margin:12px 0; }
+
+      .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 6px; }
+      .tab{ padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:#fff; cursor:pointer; font-weight:600; color:#334155; }
+      .tab.active{ background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; border-color:transparent; }
+
+      .summary{ display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin:12px 0 16px; }
+      @media (max-width: 560px){ .summary{ grid-template-columns: 1fr; } }
+      .sum-card{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(15,23,42,.04); }
+      .sum-label{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+      .sum-value{ font-size:18px; font-weight:700; }
+
+      .stats{ position: sticky; bottom: 0; margin-top: 18px; padding: 14px 16px; background: var(--surface); border:1px solid var(--border); border-radius: 14px; box-shadow: 0 -1px 10px rgba(15,23,42,.06); }
+      .empty{ text-align:center; color: var(--muted); padding: 18px 10px; }
+
+      .drawer{ position:fixed; inset:0; background:rgba(2,6,23,.28); display:none; z-index:99; }
+      .drawer.open{ display:block; }
+      .panel{ position:absolute; top:0; left:0; width:280px; max-width:85%; height:100%; background:#fff; border-right:1px solid var(--border); box-shadow: 0 4px 24px rgba(2,6,23,.15); padding:18px; }
+      .panel h4{ margin:0 0 8px; }
+      .nav-btn{ display:block; width:100%; text-align:left; margin:6px 0; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:#fff; font-weight:600; }
+      .nav-btn.active{ background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; border-color:transparent; }
+
+      /* Insights / History extra */
+      .kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 16px; }
+      @media (max-width: 720px){ .kpis{ grid-template-columns:repeat(2,1fr); } }
+      .kpi{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; box-shadow:0 2px 10px rgba(15,23,42,.04); }
+      .kpi .label{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+      .kpi .value{ font-size:18px; font-weight:700; }
+      .chart{ background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 12px rgba(15,23,42,.06); padding:12px; }
+      .chart h4{ margin:0 0 8px; font-size:14px; color:#334155; }
+      .chart .axis{ color:#64748b; font-size:12px; }
+      .chart svg{ width:100%; height:160px; display:block; }
+      .legend{ display:flex; justify-content:space-between; color:#64748b; font-size:12px; margin-top:6px; }
+      .list{ background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 12px rgba(15,23,42,.06); }
+      .list .row{ display:flex; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border); }
+      .filters{ display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:10px; margin:12px 0 12px; }
+      @media (max-width: 860px){ .filters{ grid-template-columns: 1fr 1fr; } }
+      .filter{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:8px 10px; display:flex; align-items:center; gap:8px; }
+      .filter input, .filter select{ border:0; outline:none; padding:6px 8px; background:transparent; }
+      .history-list{ background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:0 2px 12px rgba(15,23,42,.06); overflow:hidden; }
+      .hrow{ display:grid; grid-template-columns: 1fr 120px 200px auto; gap:10px; padding:12px 14px; border-bottom:1px solid var(--border); align-items:center; }
+      .hrow.head{ font-weight:700; background:#fafbff; }
+      .hrow:last-child{ border-bottom:0; }
+    </style>
+  </head>
+
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <div class="top">
+          <button id="menuBtn" class="menu-btn" type="button" aria-label="Meny"><span></span></button>
+          <div class="brand">
+            <div class="logo"></div>
+            <h1>Saved it</h1>
+          </div>
+          <button id="installBtn" class="install btn" type="button" hidden>Installera appen</button>
+        </div>
+        <p class="subtitle">Logga impulsköp du avstår. Spara pengar. Allt lagras lokalt på enheten.</p>
+      </div>
+    </header>
+
+    <main class="content">
+      <div id="root"></div>
+    </main>
+
+    <!-- Drawer -->
+    <div id="drawer" class="drawer" aria-hidden="true">
+      <div class="panel">
+        <h4>Meny</h4>
+        <button class="nav-btn" data-view="log"        type="button">Logg & översikt</button>
+        <button class="nav-btn" data-view="goals"      type="button">Sparmål</button>
+        <button class="nav-btn" data-view="insights"   type="button">Insikter</button>
+        <button class="nav-btn" data-view="history"    type="button">Historik</button>
+        <button class="nav-btn" data-view="categories" type="button" disabled>Kategorier (senare)</button>
+        <button class="nav-btn" data-view="settings"   type="button">Inställningar</button>
+        <button class="nav-btn" data-view="about"      type="button">Om</button>
+        <button class="nav-btn" data-view="feedback"   type="button">Feedback</button>
+      </div>
+    </div>
+
+    <!-- React via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const FEEDBACK_EMAIL = "gosaved.it@gmail.com";
+      const { useState, useEffect, useMemo, useRef } = React;
+
+      /* -------- Helpers (storage) -------- */
+      const load = (k, f) => { try{ const v = localStorage.getItem(k); return v? JSON.parse(v): f; } catch { return f; } };
+      const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+      /* ---------- UI helpers ---------- */
+      const SimpleCard = ({title, text}) => (
+        <div className="card" style={{padding:"16px"}}>
+          <h3 style={{margin:"0 0 8px"}}>{title}</h3>
+          <div className="muted">{text}</div>
+        </div>
+      );
+
+      /* ---------- Avstå i efterhand-formulär ---------- */
+      function AddPastForm({ onAdd }) {
+        const [name, setName] = React.useState("");
+        const [unit, setUnit] = React.useState("");
+        const [qty, setQty]   = React.useState(1);
+        const [date, setDate] = React.useState(""); // "YYYY-MM-DD"
+
+        const submit = () => {
+          const n = name.trim();
+          const p = Number(String(unit).replace(",","."));
+          const q = Math.max(1, Number(qty||1));
+          if(!n || !p || Number.isNaN(p) || p<=0){ alert("Fyll i giltigt namn och pris"); return; }
+          if(!date){ alert("Välj datum"); return; }
+          onAdd({ name:n, price:p, qty:q, date });
+          setName(""); setUnit(""); setQty(1); setDate("");
+        };
+
+        return (
+          <div className="card" style={{padding:14, marginBottom:12}}>
+            <h3 style={{marginTop:0}}>Avstå i efterhand</h3>
+            <div className="row" style={{gridTemplateColumns:'1fr 120px 100px 160px auto'}}>
+              <input type="text" placeholder="Namn (t.ex. Öl)" value={name} onChange={e=>setName(e.target.value)} />
+              <input type="text" placeholder="Pris/st" inputMode="decimal"
+                value={unit} onChange={e=>setUnit(e.target.value)} />
+              <input type="number" min="1" step="1" placeholder="Antal" value={qty} onChange={e=>setQty(e.target.value)} />
+              <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
+              <button className="btn btn-add" type="button" onClick={submit}>Spara</button>
+            </div>
+            <div className="muted">Exempel: 5 öl à 60 kr den 25 okt → pris/st = 60, antal = 5, datum = 2025-10-25.</div>
+          </div>
+        );
+      }
+
+      /* ---------- Logg-vy ---------- */
+      function LogView({items, setItems, saveMoney, deleteSaved, clearHistory, tab, setTab, totals, tabLabel}) {
+        const nameRef  = useRef(null);
+        const priceRef = useRef(null);
+
+        const addItem = () => {
+          const name = (nameRef.current?.value || "").trim();
+          const raw  = (priceRef.current?.value || "").replace(",", ".").trim();
+          const price = Number(raw);
+          if(!name || !raw){ alert("Fyll i både namn och pris"); return; }
+          if(Number.isNaN(price) || price <= 0){ alert("Ange ett giltigt pris"); return; }
+          setItems(prev => [...prev, { id: String(Date.now()), name, price }]);
+          if (nameRef.current)  { nameRef.current.value = ""; nameRef.current.focus(); }
+          if (priceRef.current) { priceRef.current.value = ""; }
+        };
+
+        return (
+          <>
+            <div className="row">
+              <input ref={nameRef} type="text" placeholder="Namn (t.ex. Latte)" autoComplete="off" />
+              <input ref={priceRef} type="text" placeholder="Pris" inputMode="decimal" pattern="[0-9]*[.,]?[0-9]*" autoComplete="off" />
+              <button className="btn btn-add" type="button" onMouseDown={(e)=>e.preventDefault()} onClick={addItem}>Lägg till</button>
+            </div>
+
+            {items.length === 0 && <div className="empty">Inga impulsköp tillagda ännu.</div>}
+            {items.length > 0 && (
+              <div className="card">
+                {items.map(item => (
+                  <div className="list-item" key={item.id}>
+                    <div><strong>{item.name}</strong> <span className="muted">({item.price} kr)</span></div>
+                    <div className="actions">
+                      <button className="btn save"   type="button" onClick={()=>saveMoney(item)}>Avstod</button>
+                      <button className="btn danger" type="button" onClick={()=>setItems(prev => prev.filter(i => i.id !== item.id))}>Ta bort</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="section"><h3>Översikt</h3></div>
+            <div className="tabs">
+              {["week","month","year","all"].map(key => (
+                <button key={key} type="button" className={"tab"+(tab===key?" active":"")} onClick={()=>setTab(key)}>
+                  {({week:"Vecka",month:"Månad",year:"År",all:"Alla"})[key]}
+                </button>
+              ))}
+            </div>
+
+            <div className="summary">
+              <div className="sum-card">
+                <div className="sum-label">Totalt sparat – {tabLabel.toLowerCase()}</div>
+                <div className="sum-value">{totals.period.toFixed(2)} kr</div>
+              </div>
+              <div className="sum-card">
+                <div className="sum-label">Antal avståenden</div>
+                <div className="sum-value">{totals.count}</div>
+              </div>
+              <div className="sum-card">
+                <div className="sum-label">Totalt (alla tider)</div>
+                <div className="sum-value">{totals.all.toFixed(2)} kr</div>
+              </div>
+            </div>
+
+            <div className="section">
+              <h3>Historik – {tabLabel.toLowerCase()}</h3>
+              {totals.all > 0 && <button className="btn danger" type="button" onClick={clearHistory}>Rensa all historik</button>}
+            </div>
+
+            {totals.count === 0 && <div className="empty">Du har inte avstått något i vald period.</div>}
+            {totals.count > 0 && (
+              <div className="card">
+                {totals.filtered.slice(0,100).map(s => {
+                  const qty = s.qty || 1;
+                  const total = (+s.price||0) * qty;
+                  return (
+                    <div className="list-item" key={s.sid}>
+                      <div>
+                        <strong>{s.name}</strong>
+                        {qty>1 && <span className="muted"> · x{qty}</span>}
+                        <span className="muted"> ({total.toFixed(2)} kr)</span>
+                      </div>
+                      <div className="actions">
+                        <span className="muted" style={{alignSelf:"center"}}>{new Date(s.date).toLocaleString()}</span>
+                        <button className="btn danger" type="button" onClick={()=>deleteSaved(s.sid)}>Ta bort</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="stats"><b>Totalt sparat: {totals.all.toFixed(2)} kr</b></div>
+          </>
+        );
+      }
+
+      /* ---------- Goals ---------- */
+      function GoalsView({items, goals, setGoals, gName, setGName, gTarget, setGTarget, gChecked, setGChecked, createGoal, removeGoal, addDeposit, toggleLink}) {
+        const [depInputs, setDepInputs] = React.useState({});
+        const setDep = (id, v) => setDepInputs(s => ({ ...s, [id]: v || "" }));
+        const commitDep = (id) => { addDeposit(id, depInputs[id] || ""); setDep(id, ""); };
+
+        return (
+          <>
+            <div className="card" style={{ padding: "14px" }}>
+              <div className="row" style={{ gridTemplateColumns: "1fr 160px auto" }}>
+                <input type="text" placeholder="Namn på mål (t.ex. Resa)" value={gName} onChange={e => setGName(e.target.value)} />
+                <input type="number" step="0.01" placeholder="Målsumma (kr)" value={gTarget} onChange={e => setGTarget(e.target.value)} />
+                <button className="btn btn-add" type="button" onClick={createGoal}>Skapa mål</button>
+              </div>
+
+              <div className="muted" style={{ marginTop: 6 }}>Välj vilka impulsköp som ska kopplas till detta mål:</div>
+              <div className="chips">
+                {items.length === 0 && <span className="muted">Inga impulsköp tillagda ännu.</span>}
+                {items.map(i => (
+                  <label key={i.id} className="chip" style={{ cursor: "pointer" }}>
+                    <input type="checkbox" checked={!!gChecked[i.id]} onChange={e => setGChecked(s => ({ ...s, [i.id]: e.target.checked }))} style={{ marginRight: 8 }} />
+                    {i.name} ({i.price} kr)
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {goals.length === 0 && <div className="empty">Inga mål ännu. Skapa ditt första ovan! ✨</div>}
+            {goals.map(goal => {
+              const pct = Math.min(100, Math.round(((goal.amount || 0) / (goal.target || 1)) * 100));
+              return (
+                <div key={goal.id} className="card" style={{ padding: "14px", marginTop: "12px" }}>
+                  <div className="list-item" style={{ borderBottom: "0", padding: "0", marginBottom: "10px" }}>
+                    <div>
+                      <strong>{goal.name}</strong>
+                      <div className="muted">Mål: {goal.target.toFixed ? goal.target.toFixed(2) : goal.target} kr · Sparat: {(goal.amount || 0).toFixed(2)} kr ({pct}%)</div>
+                    </div>
+                    <button className="btn danger" type="button" onClick={() => removeGoal(goal.id)}>Ta bort</button>
+                  </div>
+
+                  <div className="progress" style={{ height: "10px", borderRadius: "999px", background: "#eef2f7", overflow: "hidden", margin: "10px 0 8px" }}>
+                    <div style={{ height: "100%", width: pct + "%", background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }} />
+                  </div>
+
+                  <div className="muted">Kopplade impulsköp</div>
+                  <div className="chips">
+                    {items.length === 0 && <span className="muted">Inga impulsköp i listan.</span>}
+                    {items.map(i => {
+                      const checked = !!(goal.itemIds || []).includes(i.id);
+                      return (
+                        <label key={i.id} className="chip" style={{ cursor: "pointer" }}>
+                          <input type="checkbox" checked={checked} onChange={e => toggleLink(goal.id, i.id, e.target.checked)} style={{ marginRight: 8 }} />
+                          {i.name} ({i.price} kr)
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{ display: "flex", gap: 8, width: "100%", marginTop: 8 }}>
+                    <input type="number" step="0.01" placeholder="Insättning (kr)" value={depInputs[goal.id] || ""} onChange={e => setDep(goal.id, e.target.value)} />
+                    <button className="btn" type="button" onMouseDown={e => e.preventDefault()} onClick={() => commitDep(goal.id)}>Lägg till insättning</button>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        );
+      }
+
+      /* ---------- Insights ---------- */
+      function InsightsView({ saved }) {
+        const entries = React.useMemo(() => {
+          return (saved || []).map(s => ({
+            name: s.name,
+            amount: (Number(s.price) || 0) * (s.qty || 1),
+            date: new Date(s.date || Date.now()),
+            qty: s.qty || 1
+          })).filter(e => e.amount > 0);
+        }, [saved]);
+
+        const strip = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const sum = arr => arr.reduce((a,b)=>a+b,0);
+
+        const now = new Date();
+        const d7  = new Date(now);  d7.setDate(d7.getDate()-7);
+        const d30 = new Date(now); d30.setDate(d30.getDate()-30);
+
+        const last7  = entries.filter(e => strip(e.date) >= strip(d7));
+        const last30 = entries.filter(e => strip(e.date) >= strip(d30));
+        const kpis = {
+          total7:  sum(last7.map(e=>e.amount)),
+          total30: sum(last30.map(e=>e.amount)),
+          avg30:   (sum(last30.map(e=>e.amount)) / Math.max(1, new Set(last30.map(e=>strip(e.date).toDateString())).size)),
+          maxOne:  Math.max(0, ...entries.map(e=>e.amount))
+        };
+
+        const weekdayMap = new Array(7).fill(0);
+        entries.forEach(e => { weekdayMap[e.date.getDay()] += e.amount; });
+        const monToSun = [1,2,3,4,5,6,0].map(i => weekdayMap[i]);
+        const wdMax = Math.max(1, ...monToSun);
+
+        const startOfWeek = (d) => { const dd=new Date(d); const day=dd.getDay(); const diff=(day===0? -6:1)-day; dd.setDate(dd.getDate()+diff); dd.setHours(0,0,0,0); return dd; };
+        const wkMap = new Map();
+        entries.forEach(e => {
+          const wk = startOfWeek(e.date).toISOString();
+          wkMap.set(wk, (wkMap.get(wk)||0) + e.amount);
+        });
+        const weeks = [];
+        let cursor = startOfWeek(now);
+        for(let i=0;i<12;i++){
+          const key = cursor.toISOString();
+          weeks.unshift({ label: cursor.toLocaleDateString(), value: wkMap.get(key)||0 });
+          cursor = new Date(cursor); cursor.setDate(cursor.getDate()-7);
+        }
+        const wkMax = Math.max(1, ...weeks.map(w=>w.value));
+
+        const top5 = [...entries].sort((a,b)=>b.amount-a.amount).slice(0,5);
+
+        const Bars = ({ data, max, labels }) => {
+          const n = data.length;
+          const w = 600, h = 140, pad = 24, gap = 6;
+          const bw = (w - pad*2 - gap*(n-1)) / n;
+          return (
+            <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+              {data.map((v, i) => {
+                const bh = Math.max(2, Math.round((v / max) * (h - pad*2)));
+                const x = pad + i*(bw+gap);
+                const y = h - pad - bh;
+                return (
+                  <g key={i} transform={`translate(${x},${y})`}>
+                    <rect width={bw} height={bh} rx="6" />
+                    <text x={bw/2} y={bh+14} textAnchor="middle" className="axis">{labels?.[i]||''}</text>
+                  </g>
+                );
+              })}
+            </svg>
+          );
+        };
+
+        return (
+          <>
+            <div className="kpis">
+              <div className="kpi"><div className="label">Senaste 7 dagar</div><div className="value">{kpis.total7.toFixed(2)} kr</div></div>
+              <div className="kpi"><div className="label">Senaste 30 dagar</div><div className="value">{kpis.total30.toFixed(2)} kr</div></div>
+              <div className="kpi"><div className="label">Snitt / aktiv dag (30d)</div><div className="value">{kpis.avg30.toFixed(2)} kr</div></div>
+              <div className="kpi"><div className="label">Största avstående</div><div className="value">{kpis.maxOne.toFixed(2)} kr</div></div>
+            </div>
+
+            <div className="chart" style={{marginBottom:12}}>
+              <h4>Sparande per veckodag</h4>
+              <Bars data={monToSun} max={wdMax} labels={['Mån','Tis','Ons','Tor','Fre','Lör','Sön']} />
+            </div>
+
+            <div className="chart" style={{marginBottom:12}}>
+              <h4>Trend – senaste 12 veckor</h4>
+              <Bars data={weeks.map(w=>w.value)} max={wkMax} labels={weeks.map(()=> '')} />
+              <div className="legend"><span>12v sedan</span><span>Nu</span></div>
+            </div>
+
+            <div className="list">
+              <div className="row" style={{fontWeight:700}}><span>Topp 5 avståenden</span><span>Belopp</span></div>
+              {top5.length===0 && <div className="row"><span className="muted">Inget att visa ännu.</span><span></span></div>}
+              {top5.map((t,i)=>(
+                <div className="row" key={i}>
+                  <span>{t.name} <span className="muted">· {t.date.toLocaleDateString()}</span></span>
+                  <span><b>{t.amount.toFixed(2)} kr</b></span>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      }
+
+      /* ---------- Historik ---------- */
+      function HistoryView({ saved, onDelete, onClear }) {
+        const [q, setQ] = React.useState("");
+        const [dateFrom, setDateFrom] = React.useState("");
+        const [dateTo, setDateTo]     = React.useState("");
+        const [minAmt, setMinAmt]     = React.useState("");
+        const [maxAmt, setMaxAmt]     = React.useState("");
+        const [sort, setSort]         = React.useState("date_desc");
+        const [limit, setLimit]       = React.useState(50);
+
+        const strip = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+        const data = React.useMemo(() => {
+          const qlc = q.trim().toLowerCase();
+          let arr = (saved||[]).map(s => ({
+            id: s.sid,
+            name: s.name || "",
+            unit: Number(s.price)||0,
+            qty: s.qty||1,
+            amount: (Number(s.price)||0) * (s.qty||1),
+            date: new Date(s.date || Date.now())
+          }));
+
+          if (qlc) arr = arr.filter(x => x.name.toLowerCase().includes(qlc));
+          if (dateFrom) {
+            const df = strip(new Date(dateFrom));
+            arr = arr.filter(x => strip(x.date) >= df);
+          }
+          if (dateTo) {
+            const dt = strip(new Date(dateTo));
+            arr = arr.filter(x => strip(x.date) <= dt);
+          }
+          if (minAmt) arr = arr.filter(x => x.amount >= Number(minAmt));
+          if (maxAmt) arr = arr.filter(x => x.amount <= Number(maxAmt));
+
+          arr.sort((a,b) => {
+            if (sort === "date_desc") return b.date - a.date;
+            if (sort === "date_asc")  return a.date - b.date;
+            if (sort === "amt_desc")  return b.amount - a.amount;
+            if (sort === "amt_asc")   return a.amount - b.amount;
+            return 0;
+          });
+          return arr;
+        }, [saved, q, dateFrom, dateTo, minAmt, maxAmt, sort]);
+
+        const shown = data.slice(0, limit);
+        const total = data.reduce((a,x)=>a+x.amount, 0);
+
+        const exportJSON = () => {
+          const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = "saved-history.json"; a.click();
+          URL.revokeObjectURL(url);
+        };
+        const exportCSV = () => {
+          const header = "name,unit,qty,amount,date\n";
+          const rows = data.map(x =>
+            `"${(x.name||"").replace(/"/g,'""')}",${x.unit},${x.qty},${x.amount},"${x.date.toISOString()}"`
+          ).join("\n");
+          const blob = new Blob([header+rows], {type:"text/csv"});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = "saved-history.csv"; a.click();
+          URL.revokeObjectURL(url);
+        };
+
+        return (
+          <>
+            <div className="filters">
+              <div className="filter" style={{gridColumn:'span 2'}}>
+                <input type="search" placeholder="Sök på namn ..." value={q} onChange={e=>setQ(e.target.value)} />
+              </div>
+              <div className="filter">
+                <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} title="Från datum" />
+              </div>
+              <div className="filter">
+                <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} title="Till datum" />
+              </div>
+              <div className="filter">
+                <select value={sort} onChange={e=>setSort(e.target.value)}>
+                  <option value="date_desc">Nyast först</option>
+                  <option value="date_asc">Äldst först</option>
+                  <option value="amt_desc">Högst belopp</option>
+                  <option value="amt_asc">Lägst belopp</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="filters" style={{marginTop:0}}>
+              <div className="filter">
+                <input type="number" step="0.01" placeholder="Min (kr)" value={minAmt} onChange={e=>setMinAmt(e.target.value)} />
+              </div>
+              <div className="filter">
+                <input type="number" step="0.01" placeholder="Max (kr)" value={maxAmt} onChange={e=>setMaxAmt(e.target.value)} />
+              </div>
+              <div className="actions-row" style={{gridColumn:'span 3', display:'flex', gap:8, justifyContent:'flex-end', flexWrap:'wrap'}}>
+                <button className="btn" type="button" onClick={()=>setLimit(50)}>Visa 50</button>
+                <button className="btn" type="button" onClick={()=>setLimit(l => l+50)}>Visa fler</button>
+                <button className="btn" type="button" onClick={exportCSV}>Exportera CSV</button>
+                <button className="btn" type="button" onClick={exportJSON}>Exportera JSON</button>
+                {saved?.length>0 && <button className="btn danger" type="button" onClick={onClear}>Rensa all historik</button>}
+              </div>
+            </div>
+
+            <div className="history-list">
+              <div className="hrow head">
+                <div>Avstående</div>
+                <div>Belopp</div>
+                <div>Datum</div>
+                <div style={{textAlign:"right"}}>Åtgärder</div>
+              </div>
+
+              {shown.length === 0 && (
+                <div className="hrow">
+                  <div className="muted">Inget att visa för valt filter.</div>
+                  <div></div><div></div><div></div>
+                </div>
+              )}
+
+              {shown.map(row => (
+                <div className="hrow" key={row.id}>
+                  <div><strong>{row.name}</strong>{row.qty>1 && <span className="muted"> · x{row.qty}</span>}</div>
+                  <div>{row.amount.toFixed(2)} kr</div>
+                  <div className="muted">{row.date.toLocaleString()}</div>
+                  <div style={{textAlign:"right"}}>
+                    <button className="btn danger" type="button" onClick={()=>onDelete(row.id)}>Ta bort</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="stats" style={{marginTop:12}}>
+              <b>Summa i visat urval:</b> {total.toFixed(2)} kr
+            </div>
+          </>
+        );
+      }
+
+      function Drawer({current, onChange}){
+        useEffect(() => {
+          const drawer = document.getElementById("drawer");
+          const buttons = drawer.querySelectorAll('.nav-btn');
+          buttons.forEach(b => {
+            b.classList.toggle('active', b.dataset.view === current);
+            b.onclick = () => { onChange(b.dataset.view); drawer.classList.remove("open"); };
+          });
+        }, [current, onChange]);
+        return null;
+      }
+
+      /* --------------------------- App --------------------------- */
+      function App(){
+        const [items, setItems]   = useState(() => load("items", []));
+        const [saved, setSaved]   = useState(() => load("saved", []));
+        const [goals, setGoals]   = useState(() => load("goals", []));
+        const [view, setView]     = useState("log");
+        const [tab, setTab]       = useState("week");
+
+        useEffect(() => save("items", items), [items]);
+        useEffect(() => save("saved", saved), [saved]);
+        useEffect(() => save("goals", goals), [goals]);
+
+        // Drawer
+        useEffect(() => {
+          const drawer = document.getElementById("drawer");
+          const btn = document.getElementById("menuBtn");
+          const open  = () => drawer.classList.add("open");
+          const close = (e) => { if(e.target === drawer) drawer.classList.remove("open"); };
+          btn.addEventListener("click", open);
+          drawer.addEventListener("click", close);
+          return () => { btn.removeEventListener("click", open); drawer.removeEventListener("click", close); };
+        }, []);
+
+        // Spara/ta bort – med stöd för qty + backdate
+        const saveMoney = (item, opts = {}) => {
+          const qty = Math.max(1, Number(opts.qty || 1));
+          const when = opts.date ? new Date(opts.date) : new Date();
+          // om bara YYYY-MM-DD: sätt mitt på dagen för att undvika TZ-snett
+          if (opts.date && typeof opts.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(opts.date)) {
+            when.setHours(12,0,0,0);
+          }
+          const entry = { ...item, qty, sid:String(Date.now()), date: when.toISOString() };
+          setSaved(prev => [entry, ...prev]);
+          // goals: lägg till totalbeloppet
+          setGoals(prev => prev.map(g => (
+            (g.itemIds||[]).includes(item.id)
+              ? { ...g,
+                  amount:(g.amount||0)+((+item.price||0)*qty),
+                  deposits:[...(g.deposits||[]), {date:entry.date, amount:(+item.price||0)*qty, source:item.name}] }
+              : g
+          )));
+        };
+
+        const deleteSaved = (sid) => setSaved(prev => prev.filter(s => s.sid !== sid));
+        const clearHistory = () => { if(confirm("Rensa hela historiken?")) setSaved([]); };
+
+        // Datum-hjälp
+        const toDate = (iso) => new Date(iso);
+        const stripTime = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const startOfWeek = (d) => { const day = d.getDay(); const diff = (day === 0 ? -6 : 1) - day; const s = new Date(d); s.setDate(d.getDate()+diff); return stripTime(s); };
+        const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+        const startOfYear  = (d) => new Date(d.getFullYear(), 0, 1);
+        const isInRange = (date, start) => stripTime(date) >= stripTime(start);
+
+        const today = new Date();
+        const periodStart = useMemo(() => {
+          if(tab === "week")  return startOfWeek(today);
+          if(tab === "month") return startOfMonth(today);
+          if(tab === "year")  return startOfYear(today);
+          return new Date(0);
+        }, [tab]);
+
+        const filtered = useMemo(() => saved.filter(s => isInRange(toDate(s.date), periodStart)), [saved, periodStart]);
+
+        const totals = {
+          all: saved.reduce((a,s)=> a + ((+s.price||0) * (s.qty||1)), 0),
+          period: filtered.reduce((a,s)=> a + ((+s.price||0) * (s.qty||1)), 0),
+          count: filtered.reduce((a,s)=> a + (s.qty||1), 0),
+          filtered,
+          deleteSaved
+        };
+
+        const tabLabel = { week:"Vecka", month:"Månad", year:"År", all:"Alla" }[tab];
+
+        // Goals inputs
+        const [gName, setGName] = useState("");
+        const [gTarget, setGTarget] = useState("");
+        const [gChecked, setGChecked] = useState({});
+        const createGoal = () => {
+          const name = gName.trim();
+          const target = Number((gTarget||"").replace(",", ".")); if(!name || !target || Number.isNaN(target) || target<=0){ alert("Fyll i giltigt namn och målbelopp"); return; }
+          const itemIds = Object.entries(gChecked).filter(([,v])=>v).map(([k])=>k);
+          const goal = { id:String(Date.now()), name, target, amount:0, itemIds, deposits:[] };
+          setGoals(prev => [goal, ...prev]); setGName(""); setGTarget(""); setGChecked({});
+        };
+        const removeGoal = (id) => { if(confirm("Ta bort det här målet?")) setGoals(prev => prev.filter(g => g.id !== id)); };
+        const addDeposit = (id, amount) => {
+          const num = Number(String(amount).replace(",", ".")); if(Number.isNaN(num)||num<=0){ alert("Ogiltigt belopp"); return; }
+          const date = new Date().toISOString();
+          setGoals(prev => prev.map(g => g.id === id ? { ...g, amount:(g.amount||0)+num, deposits:[...(g.deposits||[]), {date, amount:num, source:"Manuell"}] } : g));
+        };
+        const toggleLink = (goalId, itemId, checked) => {
+          setGoals(prev => prev.map(g => {
+            if(g.id !== goalId) return g;
+            const set = new Set(g.itemIds || []);
+            if(checked) set.add(itemId); else set.delete(itemId);
+            return { ...g, itemIds:[...set] };
+          }));
+        };
+
+        // “Avstå i efterhand” handler
+        const addPast = ({name, price, qty, date}) => {
+          const tempItem = { id: `temp-${Date.now()}`, name, price };
+          saveMoney(tempItem, { qty, date });
+        };
+
+        return (
+          <>
+            {view === "log" && (
+              <>
+                <AddPastForm onAdd={addPast} />
+                <LogView
+                  items={items}
+                  setItems={setItems}
+                  saveMoney={saveMoney}
+                  deleteSaved={deleteSaved}
+                  clearHistory={clearHistory}
+                  tab={tab}
+                  setTab={setTab}
+                  totals={totals}
+                  tabLabel={tabLabel}
+                />
+              </>
+            )}
+
+            {view === "goals" && (
+              <GoalsView
+                items={items}
+                goals={goals}
+                setGoals={setGoals}
+                gName={gName} setGName={setGName}
+                gTarget={gTarget} setGTarget={setGTarget}
+                gChecked={gChecked} setGChecked={setGChecked}
+                createGoal={createGoal}
+                removeGoal={removeGoal}
+                addDeposit={addDeposit}
+                toggleLink={toggleLink}
+              />
+            )}
+
+            {view === "insights" && <InsightsView saved={saved} />}
+
+            {view === "history" && (
+              <HistoryView
+                saved={saved}
+                onDelete={deleteSaved}
+                onClear={clearHistory}
+              />
+            )}
+
+            {view === "settings" && (
+              <SimpleCard title="Inställningar" text="Tema, notiser och export/import (kommer senare)." />
+            )}
+
+            {view === "about"    && <SimpleCard title="Om" text="Saved it – logga avståenden och spara pengar. Allt lagras lokalt." />}
+            {view === "feedback" && <SimpleCard title="Feedback" text={`Maila gärna idéer: ${FEEDBACK_EMAIL}`} />}
+
+            <Drawer current={view} onChange={setView} />
+          </>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+
+      // Install (PWA)
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.getElementById('installBtn');
+        if(btn){
+          btn.hidden = false;
+          btn.onclick = async () => {
+            btn.disabled = true;
+            await deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            btn.hidden = true;
+            deferredPrompt = null;
+          };
+        }
+      });
+
+      // Service worker (BASE-säker registrering)
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          const BASE = window.__BASE_PATH__ || '/';
+          navigator.serviceWorker.register(`${BASE}service-worker.js`).catch(()=>{});
+        });
+      }
+    </script>
+  </body>
+</html>
