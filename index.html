@@ -136,7 +136,7 @@
 
   <body>
     <header class="hero">
-      <div class="wrap">
+      <div className="wrap">
         <div class="top">
           <button id="menuBtn" class="menu-btn" type="button" aria-label="Meny"><span></span></button>
           <div class="brand">
@@ -161,7 +161,7 @@
         <button class="nav-btn" data-view="goals"      type="button">Sparmål</button>
         <button class="nav-btn" data-view="insights"   type="button">Insikter</button>
         <button class="nav-btn" data-view="history"    type="button">Historik</button>
-        <button class="nav-btn" data-view="categories" type="button" disabled>Kategorier (senare)</button>
+        <button class="nav-btn" data-view="categories" type="button">Kategorier</button>
         <button class="nav-btn" data-view="settings"   type="button">Inställningar</button>
         <button class="nav-btn" data-view="about"      type="button">Om</button>
         <button class="nav-btn" data-view="feedback"   type="button">Feedback</button>
@@ -630,6 +630,16 @@
         );
       }
 
+      /* ---------- Kategorier (här ligger formuläret) ---------- */
+      function CategoriesView({ onAdd }) {
+        return (
+          <>
+            <AddPastForm onAdd={onAdd} />
+            <SimpleCard title="Kategorier" text="(Kommer senare) – här kommer du kunna gruppera avståenden. Tills dess kan du lägga till avståenden i efterhand här ovan." />
+          </>
+        );
+      }
+
       function Drawer({current, onChange}){
         useEffect(() => {
           const drawer = document.getElementById("drawer");
@@ -669,13 +679,11 @@
         const saveMoney = (item, opts = {}) => {
           const qty = Math.max(1, Number(opts.qty || 1));
           const when = opts.date ? new Date(opts.date) : new Date();
-          // om bara YYYY-MM-DD: sätt mitt på dagen för att undvika TZ-snett
           if (opts.date && typeof opts.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(opts.date)) {
             when.setHours(12,0,0,0);
           }
           const entry = { ...item, qty, sid:String(Date.now()), date: when.toISOString() };
           setSaved(prev => [entry, ...prev]);
-          // goals: lägg till totalbeloppet
           setGoals(prev => prev.map(g => (
             (g.itemIds||[]).includes(item.id)
               ? { ...g,
@@ -751,20 +759,17 @@
         return (
           <>
             {view === "log" && (
-              <>
-                <AddPastForm onAdd={addPast} />
-                <LogView
-                  items={items}
-                  setItems={setItems}
-                  saveMoney={saveMoney}
-                  deleteSaved={deleteSaved}
-                  clearHistory={clearHistory}
-                  tab={tab}
-                  setTab={setTab}
-                  totals={totals}
-                  tabLabel={tabLabel}
-                />
-              </>
+              <LogView
+                items={items}
+                setItems={setItems}
+                saveMoney={saveMoney}
+                deleteSaved={deleteSaved}
+                clearHistory={clearHistory}
+                tab={tab}
+                setTab={setTab}
+                totals={totals}
+                tabLabel={tabLabel}
+              />
             )}
 
             {view === "goals" && (
@@ -790,6 +795,10 @@
                 onDelete={deleteSaved}
                 onClear={clearHistory}
               />
+            )}
+
+            {view === "categories" && (
+              <CategoriesView onAdd={addPast} />
             )}
 
             {view === "settings" && (
